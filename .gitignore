@@ -1,0 +1,24 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+
+# Debug and temporary directories
+debug_tools/
+debug_outputs/
+scratch/
+*.log
+
+# Training parquets and cache (retain core lightweight demo cache and best checkpoint)
+*.parquet
+*.pt
+!tokenized_fast_tensor_64.pt
+!models/checkpoints_discrete_joint_gpu/*.pt
+
+# OS & Editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
