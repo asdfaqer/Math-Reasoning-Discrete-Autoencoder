@@ -712,6 +712,7 @@ def generate_sample_data(model_id=None, sample_idx=None, split="val", custom_tex
             max_length=max_length,
             padding="max_length",
             truncation=True,
+            add_special_tokens=False,
             return_tensors="pt"
         )
         input_ids = inputs["input_ids"].to(DEVICE)
@@ -727,6 +728,8 @@ def generate_sample_data(model_id=None, sample_idx=None, split="val", custom_tex
                 sample_idx = random.randint(0, len(active_tensors) - 1)
             input_ids = active_tensors[sample_idx:sample_idx+1].to(DEVICE).long()
             pad_id = getattr(CURRENT_MODEL, "pad_token_id", 1)
+            if input_ids[0, 0] == 0:
+                input_ids = torch.cat([input_ids[:, 1:], torch.full((1, 1), pad_id, dtype=torch.long, device=DEVICE)], dim=1)
             attention_mask = (input_ids != pad_id).long().to(DEVICE)
             raw_text_sliced = tokenizer.decode(input_ids[0], skip_special_tokens=False)
             dataset_texts = active_tensors
@@ -743,7 +746,7 @@ def generate_sample_data(model_id=None, sample_idx=None, split="val", custom_tex
                 sample_idx = random.randint(0, len(dataset_texts) - 1)
 
             raw_text = dataset_texts[sample_idx]
-            full_tokens = tokenizer.encode(raw_text, truncation=False)
+            full_tokens = tokenizer.encode(raw_text, truncation=False, add_special_tokens=False)
             pad_id = tokenizer.pad_token_id if tokenizer.pad_token_id is not None else 1
             if len(full_tokens) > max_length:
                 max_start = len(full_tokens) - max_length
@@ -1092,7 +1095,7 @@ def generate_sample_data(model_id=None, sample_idx=None, split="val", custom_tex
             logits = outputs["logits"][0]
             pred_ids = torch.argmax(logits, dim=-1).cpu().tolist()
 
-    decoded_text = tokenizer.decode(pred_ids, skip_special_tokens=False)
+    decoded_text = tokenizer.decode(pred_ids, skip_special_tokens=True)
 
     if 'token_details' not in locals() or token_details is None:
         token_details = []
