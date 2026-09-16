@@ -1123,6 +1123,27 @@ def generate_sample_data(model_id=None, sample_idx=None, split="val", custom_tex
         tokenizer
     )
 
+    # Build exact token-level reconstruction aligned with token_details
+    error_dict = {e["pos"]: e.get("predicted_token") for e in lossless_metrics.get("errors", [])}
+    reconstructed_tokens = []
+    for item in token_details:
+        pos = item.get("pos", 0)
+        if pos in error_dict:
+            reconstructed_tokens.append({
+                "token": error_dict[pos],
+                "is_exact": False,
+                "pos": pos,
+                "expected": item["token"]
+            })
+        else:
+            reconstructed_tokens.append({
+                "token": item["token"],
+                "is_exact": True,
+                "pos": pos,
+                "expected": item["token"]
+            })
+
+
     return {
         "sample_index": sample_idx,
         "total_samples": len(dataset_texts),
@@ -1137,7 +1158,8 @@ def generate_sample_data(model_id=None, sample_idx=None, split="val", custom_tex
         "decoded_text": decoded_text,
         "probe_stats": probe_stats if 'probe_stats' in locals() else None,
         "lossless_metrics": lossless_metrics,
-        "checkpoint_info": CHECKPOINT_INFO
+        "checkpoint_info": CHECKPOINT_INFO,
+        "reconstructed_tokens": reconstructed_tokens
     }
 
 HTML_TEMPLATE = """<!DOCTYPE html>
